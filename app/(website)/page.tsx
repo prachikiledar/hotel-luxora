@@ -114,7 +114,9 @@ function renderParagraphs(description: string, highlightTerms: string) {
 
 // ─── Hero Section Renderer ────────────────────────────────────────────────────
 
-function HeroRenderer({ sec }: { sec: HeroSection }) {
+function HeroRenderer({ sec }: { sec?: HeroSection }) {
+    const fallbackHero = DEFAULT_HOME_SECTIONS[0] as unknown as HeroSection;
+    const hero = (sec && (sec as any).type === "hero") ? sec : fallbackHero;
     const router = useRouter();
     const today = new Date().toLocaleDateString('en-CA');
     const tomorrowDate = new Date();
@@ -126,8 +128,8 @@ function HeroRenderer({ sec }: { sec: HeroSection }) {
     const [guests, setGuests] = useState(2);
     const [activeImg, setActiveImg] = useState(0);
 
-    const images = sec.images?.length > 0
-        ? sec.images
+    const images = (hero.images && Array.isArray(hero.images) && hero.images.length > 0)
+        ? hero.images
         : [
             { url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=2070&auto=format&fit=crop" },
             { url: "https://images.unsplash.com/photo-1566404791732-26150b0cd07f?auto=format&fit=crop&q=80" },
@@ -152,14 +154,14 @@ function HeroRenderer({ sec }: { sec: HeroSection }) {
         }
     };
 
-    const title = sec.title || "Smart, Simple";
-    const titleEm = sec.titleEm || "Comfort";
-    const subtitle = sec.subtitle || "An intimate retreat in the heart of Sitapura, Jaipur — where affordability meets the warmth of genuine hospitality.";
-    const primaryBtnLabel = sec.primaryButtonLabel || "Explore Rooms";
-    const primaryBtnLink = sec.primaryButtonLink === "/rooms" ? "/book" : (sec.primaryButtonLink || "#rooms");
-    const secondaryBtnLabel = sec.secondaryButtonLabel || "Our Story";
-    const secondaryBtnLink = sec.secondaryButtonLink || "#about";
-    const stats = sec.stats?.length > 0 ? sec.stats : [
+    const title = hero.title || "Smart, Simple";
+    const titleEm = hero.titleEm || "Comfort";
+    const subtitle = hero.subtitle || "An intimate retreat in the heart of Sitapura, Jaipur — where affordability meets the warmth of genuine hospitality.";
+    const primaryBtnLabel = hero.primaryButtonLabel || "Explore Rooms";
+    const primaryBtnLink = hero.primaryButtonLink === "/rooms" ? "/book" : (hero.primaryButtonLink || "#rooms");
+    const secondaryBtnLabel = hero.secondaryButtonLabel || "Our Story";
+    const secondaryBtnLink = hero.secondaryButtonLink || "#about";
+    const stats = (hero.stats && Array.isArray(hero.stats) && hero.stats.length > 0) ? hero.stats : [
         { id: "s1", value: "24+", label: "Years of Excellence" },
         { id: "s2", value: "340+", label: "Happy Guests" },
         { id: "s3", value: "4.9", label: "Guest Rating" },
@@ -297,7 +299,13 @@ function HeroRenderer({ sec }: { sec: HeroSection }) {
 // ─── Text+Image Section Renderer ──────────────────────────────────────────────
 
 function TextImageRenderer({ sec }: { sec: HomeTextSection }) {
+    if (!sec) return null;
     const isLeft = sec.imagePosition === "left";
+    const heading = sec.heading || "About Hotel Luxora";
+    const images = (sec.images && Array.isArray(sec.images)) ? sec.images : [];
+    const stats = (sec.stats && Array.isArray(sec.stats)) ? sec.stats : [];
+    const pillars = (sec.pillars && Array.isArray(sec.pillars)) ? sec.pillars : [];
+
     return (
         <section id="about" style={{ padding: "112px 0" }}>
             <div className="max-w">
@@ -306,39 +314,39 @@ function TextImageRenderer({ sec }: { sec: HomeTextSection }) {
                         <div className="about-imgs">
                             <div className="about-gold-bar" />
                             <div className="about-main-img fade-in-up visible">
-                                {sec.images && sec.images.length > 0 ? (
+                                {images.length > 0 ? (
                                     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-                                        {sec.images.map((img, idx) => (
+                                        {images.map((img, idx) => (
                                             <div key={idx} style={{ 
                                                 position: idx === 0 ? "relative" : "absolute", 
                                                 top: 0, left: 0, width: "100%", height: "100%",
                                                 opacity: 1, // Simple for now, can add slider logic
                                                 display: idx === 0 ? "block" : "none"
                                             }}>
-                                                <img src={img.url} alt={sec.heading || "Section"} style={{ width: "100%", height: "110%", marginTop: "-5%", objectFit: "cover" }} />
+                                                <img src={img.url} alt={heading} style={{ width: "100%", height: "110%", marginTop: "-5%", objectFit: "cover" }} />
                                             </div>
                                         ))}
                                     </div>
                                 ) : <div style={{ width: "100%", height: "100%", background: "#1a1a1a" }} />}
                                 <div className="about-img-overlay" />
                             </div>
-                            {sec.stats?.[0] && (
+                            {stats[0] && (
                                 <div className="about-stat-card fade-in-up visible">
-                                    <div className="about-stat-num font-display">{sec.stats[0].value}</div>
-                                    <div className="about-stat-label">{sec.stats[0].label}</div>
+                                    <div className="about-stat-num font-display">{stats[0].value}</div>
+                                    <div className="about-stat-label">{stats[0].label}</div>
                                 </div>
                             )}
                         </div>
                     )}
                     <div className="about-text" style={{ fontSize: "1.05rem", lineHeight: "1.8", color: "#a0a0a0" }}>
                         <h2 className="section-title fade-in-up visible" style={{ fontSize: 36, marginBottom: 32, lineHeight: 1.2, color: "var(--ivory)" }}>
-                            {sec.heading.includes("\n")
-                                ? sec.heading.split("\n").map((line, i) => <React.Fragment key={i}>{i > 0 && <br />}{line}</React.Fragment>)
-                                : <>{sec.heading.split(" ").slice(0, -1).join(" ")} <em>{sec.heading.split(" ").slice(-1)}</em></>
+                            {heading.includes("\n")
+                                ? heading.split("\n").map((line, i) => <React.Fragment key={i}>{i > 0 && <br />}{line}</React.Fragment>)
+                                : <>{heading.split(" ").slice(0, -1).join(" ")} <em>{heading.split(" ").slice(-1)}</em></>
                             }
                         </h2>
                         {renderParagraphs(sec.description, sec.highlightTerms)}
-                        {sec.heading === "Budget-Friendly Stay in Jaipur" && <NearbyPlaces />}
+                        {heading === "Budget-Friendly Stay in Jaipur" && <NearbyPlaces />}
                         {(sec.pillars && sec.pillars.length > 0) ? (
                             <div className="pillars" style={{ marginTop: 40 }}>
                                 {sec.pillars.map(p => (
@@ -401,6 +409,7 @@ function TextImageRenderer({ sec }: { sec: HomeTextSection }) {
 // ─── Quote Renderer ───────────────────────────────────────────────────────────
 
 function QuoteRenderer({ sec }: { sec: HomeQuoteSection }) {
+    if (!sec) return null;
     return (
         <div style={{ background: "rgba(212, 168, 87, 0.05)", padding: "100px 40px", textAlign: "center", borderRadius: "1px", border: "1px solid rgba(212, 168, 87, 0.1)", margin: "0 0 80px" }}>
             <div className="section-eyebrow fade-in-up visible" style={{ justifyContent: "center" }}>
@@ -408,7 +417,7 @@ function QuoteRenderer({ sec }: { sec: HomeQuoteSection }) {
             </div>
             <blockquote className="font-display fade-in-up visible"
                 style={{ fontSize: "clamp(24px, 3vw, 36px)", color: "var(--ivory)", fontStyle: "italic", maxWidth: 800, margin: "24px auto" }}>
-                {sec.text}
+                {sec.text || ""}
             </blockquote>
         </div>
     );
@@ -457,10 +466,10 @@ export default function HomePage() {
     const sections: any[] = useCMS ? (cmsData!.sections as any[]) : [...DEFAULT_HOME_SECTIONS];
 
     // Find if there is a CMS-managed hero or a text-image "about" section
-    const heroSection = (sections.find(s => s.type === "hero") || DEFAULT_HOME_SECTIONS[0]) as HeroSection;
-    const textImageSections = sections.filter(s => s.type === "text-image") as HomeTextSection[];
-    const quoteSections = sections.filter(s => s.type === "quote") as HomeQuoteSection[];
-    const testimSections = sections.filter(s => s.type === "testimonials") as HomeTestimonialsSection[];
+    const heroSection = (sections.find(s => s && s.type === "hero") || DEFAULT_HOME_SECTIONS[0]) as HeroSection;
+    const textImageSections = sections.filter(s => s && s.type === "text-image") as HomeTextSection[];
+    const quoteSections = sections.filter(s => s && s.type === "quote") as HomeQuoteSection[];
+    const testimSections = sections.filter(s => s && s.type === "testimonials") as HomeTestimonialsSection[];
     const hasCustomAbout = textImageSections.length > 0 || quoteSections.length > 0 || testimSections.length > 0;
 
     return (
